@@ -1,0 +1,36 @@
+{% extends 'school_app/base.html' %}
+{% block content %}
+
+    <div class="main_frame" style = "margin-top: 4px"><h1><a href="/" class="noa">School app</a></h1></div>
+    {% if app_user is not None %}
+        <div class="medium_frame_thin"><h2>Soubory</h2></div>
+        <div class="medium_frame" style="text-align: center">
+        <form method="post">
+        {% csrf_token %}
+            <table class="user_table">
+                {% for file in soubory %}
+                <tr>
+                    {% if deletable == True %}
+                        <td class="center" style="width: 40px"><label><input type="checkbox" name="smazat[{{ file }}]" value="{{ file }}"></label></td>
+                    {% endif %}
+                    <td>
+                        <a href="{{ plna_cesta }}{{ file }}">{{ file }}</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+            {% if deletable == True %}
+                <input type="hidden" name="cesta" value="{{ cesta }}">
+                <input class="button" type="submit" name="delete" value="Smazat">
+            {% endif %}
+        </form>
+        </div>
+    {% else %}
+        <div class="medium_frame_thin"><h2>Neregistrovaní uživatelé nemají právo zobrazit tuto stránku.</h2></div>
+    {% endif %}
+
+
+{% endblock %}
+
+
+

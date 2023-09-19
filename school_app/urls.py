@@ -1,0 +1,77 @@
+from django.conf.urls import url
+from django.urls import path
+from school_app import views
+from django.conf import settings
+from django.conf.urls.static import static
+
+urlpatterns = [
+    url(r'^$', views.index, name='index'),
+    url(r'^user/(?P<user_login>[a-zA-Z0-9]+)/$', views.user_detail, name='user'),
+    url(r'^term/(?P<term_id>[0-9]+)/$', views.term_detail, name='term'),
+    url(r'^login$', views.login, name='login'),
+    url(r'^login/', views.login, name='login'),
+    url(r'^login\?', views.login, name='login'),
+    url(r'^users$', views.users, name='users'),
+    url(r'^users/', views.users, name='users'),
+    url(r'^users\?', views.users, name='users'),
+    url(r'^newcourse$', views.newCourse, name='newcourse'),
+    url(r'^newcourse/', views.newCourse, name='newcourse'),
+    url(r'^newcourse\?', views.newCourse, name='newcourse'),
+    url(r'^course_types$', views.courseTypes, name='course_types'),
+    url(r'^course_types/', views.courseTypes, name='course_types'),
+    url(r'^course_types\?', views.courseTypes, name='course_types'),
+    url(r'^my_courses$', views.my_courses, name='my_courses'),
+    url(r'^my_courses/', views.my_courses, name='my_courses'),
+    url(r'^my_courses\?', views.my_courses, name='my_courses'),
+    url(r'^course_approval$', views.course_approval, name='course_approval'),
+    url(r'^course_approval/', views.course_approval, name='course_approval'),
+    url(r'^course_approval\?', views.course_approval, name='course_approval'),
+    url(r'^course_detail$', views.course_detail, name='course_detail'),
+    url(r'^course_detail/', views.course_detail, name='course_detail'),
+    url(r'^course_detail\?', views.course_detail, name='course_detail'),
+    url(r'^room_detail$', views.room_detail, name='room_detail'),
+    url(r'^room_detail/', views.room_detail, name='room_detail'),
+    url(r'^room_detail\?', views.room_detail, name='room_detail'),
+    url(r'^rooms$', views.rooms, name='rooms'),
+    url(r'^rooms/', views.rooms, name='rooms'),
+    url(r'^rooms\?', views.rooms, name='rooms'),
+    url(r'^course_register$', views.course_register, name='course_register'),
+    url(r'^course_register/', views.course_register, name='course_register'),
+    url(r'^course_register\?', views.course_register, name='course_register'),
+    url(r'^schedule$', views.schedule, name='schedule'),
+    url(r'^schedule/', views.schedule, name='schedule'),
+    url(r'^schedule\?', views.schedule, name='schedule'),
+    url(r'^terms$', views.terms, name='terms'),
+    url(r'^terms/', views.terms, name='terms'),
+    url(r'^terms\?', views.terms, name='terms'),
+    url(r'^register_manage$', views.register_manage, name='register_manage'),
+    url(r'^register_manage/', views.register_manage, name='register_manage'),
+    url(r'^register_manage\?', views.register_manage, name='register_manage'),
+    url(r'^new_room$', views.new_room, name='new_room'),
+    url(r'^new_room/', views.new_room, name='new_room'),
+    url(r'^new_room\?', views.new_room, name='new_room'),
+    url(r'^equipment$', views.equipment, name='equipment'),
+    url(r'^equipment/', views.equipment, name='equipment'),
+    url(r'^equipment\?', views.equipment, name='equipment'),
+    url(r'^new_equipment$', views.new_equipment, name='new_equipment'),
+    url(r'^new_equipment/', views.new_equipment, name='new_equipment'),
+    url(r'^new_equipment\?', views.new_equipment, name='new_equipment'),
+    url(r'^equip_detail$', views.equip_detail, name='equip_detail'),
+    url(r'^equip_detail/', views.equip_detail, name='equip_detail'),
+    url(r'^equip_detail\?', views.equip_detail, name='equip_detail'),
+
+    path('upload', views.upload, name='upload'),
+    path('upload/', views.upload, name='upload'),
+    url(r'^upload\?', views.upload, name='upload'),
+    path('files', views.files, name='files'),
+    path('files/', views.files, name='files'),
+    url(r'^files\?', views.files, name='files'),
+    url(r'^media/(.*)', views.send_file, name='send_file'),
+
+    # 404
+    url(r'^(?!admin)$', views.error_404, name='error_404'),
+    url(r'^(?!admin/)', views.error_404, name='error_404'),
+]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

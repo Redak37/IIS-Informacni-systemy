@@ -1,0 +1,25 @@
+{% extends 'school_app/base.html' %}
+{% block content %}
+
+    <div class="main_frame" style = "margin-top: 4px"><h1><a href="/" class="noa">School app</a></h1></div>
+    {% if app_user is not None %}
+        <div class="medium_frame_thin"><h2>Upload</h2></div>
+        <div class="medium_frame" style="text-align: center">
+            {% if resend is not None %}
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="hidden" name="cesta" value="{{ resend }}">
+                    <input type="file" name="soubor">
+                    <button class="button" type="submit">Nahraj soubor</button>
+                    <label>{{ submit_err }}</label>
+                </form>
+            {% else %}
+                <label>Nahrávat soubory můžeš pouze po kliknutí na tlačítko "Nahrát soubor" u termínu kurzu.</label>
+            {% endif %}
+        </div>
+    {% else %}
+        <div class="medium_frame_thin"><h2>Neregistrovaní uživatelé nemají právo zobrazit tuto stránku.</h2></div>
+    {% endif %}
+
+
+{% endblock %}

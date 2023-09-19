@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <title>Přehled kurzů</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'school_app/style.css' %}" />
+</head>
+<body>
+    {% if app_user is not None %}
+        <div style = "text-align: right">
+            <a href="/?logout">Odhlásit se</a>
+        </div>
+        <div class="sidenav">
+            <div class="logged_info">
+                Uživatel: {{ app_user }}<br>
+                Skupina: {{ app_user.permission }}
+            </div>
+            <h2>Hlavní menu</h2>
+            <a href="/">Seznam kurzů</a><br>
+            <a href="/schedule">Rozvrh</a><br>
+            <a href="/terms">Termíny</a><br>
+            <a href="/course_register">Registrace kurzů</a><br>
+            {# Lektor #}
+            {% if app_user.permission.id >= 2 %}
+                <br>
+                <a href="/my_courses">Moje kurzy</a><br>
+            {% endif %}
+            {# Garant #}
+            {% if app_user.permission.id >= 3 %}
+                <br>
+                <a href="/register_manage">Správa registrací</a><br>
+                <a href="/newcourse">Nový kurz</a><br>
+            {% endif %}
+            {# Vedoucí #}
+            {% if app_user.permission.id >= 4 %}
+                <br>
+                <a href="/rooms">Správa místností</a><br>
+                <a href="/course_approval">Schvalování kurzů</a><br>
+                <a href="/course_types">Správa typů kurzů</a><br>
+            {% endif %}
+            {# Admin #}
+            {% if app_user.permission.id >= 5 %}
+                <br>
+                <a href="/users">Správa uživatelů</a><br>
+            {% endif %}
+        </div>
+    {% else %}
+        <div style = "text-align: right">
+            <a href="/login">Přihlásit/Registrovat</a>
+        </div>
+    {% endif %}
+
+    <div class="main_frame" style = "margin-top: 4px"><h1><a href="/" class="noa">School app</a></h1></div>
+    <div class="medium_frame_thin"><h2>
+        {% if app_user is None %}Seznam kurzů
+        {% elif onlyUserRegistered %}Seznam zapsaných kurzů
+        {% else %}Seznam všech kurzů{% endif %}
+    </h2></div>
+    <div class="medium_frame">
+        <table style="margin-bottom: 10px">
+            {% if courseList is not None %}
+                <tr>
+                    <th class="min">Zkr.</th>
+                    <th style="width: 50%">Kurz</th>
+                    <th>Garant</th>
+                    {% if app_user is not None and not onlyUserRegistered %}
+                        <th class="min">Zapsán</th>
+                    {% endif %}
+                </tr>
+                {% for course in courseList %}
+                    <tr>
+                        <td class="center"><a href="course_detail?predmet={{ course.abbrev }}">{{ course.abbrev }}</a></td>
+                        <td><a href="course_detail?predmet={{ course.abbrev }}">{{ course.title }}</a></td>
+                        <td><a href="{% url 'user' course.garant.login %}">{{ course.garant }}</a></td>
+                        {% if app_user is not None and not onlyUserRegistered %}
+                            <td class="center"><label>
+                                <input disabled="disabled" type="checkbox"
+                                           {% if course in registeredCourses %} checked="checked" {% endif %}>
+                            </label></td>
+                        {% endif %}
+                    </tr>
+                {% endfor %}
+            {% else %}
+                <tr><td>Žádné kurzy k zobrazení</td></tr>
+            {% endif %}
+        </table>
+        {% if app_user is not None %}
+            <form method="post">{% csrf_token %}
+                <input class="button"  type="submit"
+                       {% if onlyUserRegistered %} name="all" value="Zobrazit všechny kurzy"
+                       {% else %} name="onlyRegistered" value="Zobrazit pouze regitrované kurzy" {% endif %}>
+            </form>
+        {% endif %}
+        {% if not onlyUserRegistered or app_user is None %}
+            <form method="post">{% csrf_token %}
+                <div style="padding: 20px 5px 5px 5px">
+                    <label>Vyhledávání: </label>
+                    <label><input class="login_input" type="text" name="searchThis" value="{% if search is not None %}{{ search }}{% endif %}"></label>
+                    <input class="button" type="submit" name="search" value="Vyhledat/Filtrovat">
+                    {% if search is not None %}
+                        <input class="button" type="submit" name="cancelSearch" value="Zrušit filtr">
+                    {% endif %}
+                </div>
+            </form>
+        {% endif %}
+    </div>
+</body>
+</html>

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+{% load static %}
+
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <title>Místnost č.{{ room.doorNumber }}</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'school_app/style.css' %}" />
+</head>
+<body>
+    {% if app_user is not None %}
+        <div style = "text-align: right">
+            <a href="/index?logout">Odhlásit se</a>
+        </div>
+        <div class="sidenav">
+            <div class="logged_info">
+                Uživatel: {{ app_user }}<br>
+                Skupina: {{ app_user.permission }}
+            </div>
+            <h2>Hlavní menu</h2>
+            <a href="/">Seznam kurzů</a><br>
+            <a href="/schedule">Rozvrh</a><br>
+            <a href="/terms">Termíny</a><br>
+            <a href="/course_register">Registrace kurzů</a><br>
+            {# Lektor #}
+            {% if app_user.permission.id >= 2 %}
+                <br>
+                <a href="/my_courses">Moje kurzy</a><br>
+            {% endif %}
+            {# Garant #}
+            {% if app_user.permission.id >= 3 %}
+                <br>
+                <a href="/register_manage">Správa registrací</a><br>
+                <a href="/newcourse">Nový kurz</a><br>
+            {% endif %}
+            {# Vedoucí #}
+            {% if app_user.permission.id >= 4 %}
+                <br>
+                <a href="/rooms">Správa místností</a><br>
+                <a href="/course_approval">Schvalování kurzů</a><br>
+                <a href="/course_types">Správa typů kurzů</a><br>
+            {% endif %}
+            {# Admin #}
+            {% if app_user.permission.id >= 5 %}
+                <br>
+                <a href="/users">Správa uživatelů</a><br>
+            {% endif %}
+        </div>
+    {% else %}
+        <div class="sidenav">
+            <h2>Hlavní menu</h2>
+            <a href="/">Seznam kurzů</a><br>
+        </div>
+        <div style = "text-align: right">
+            <a href="/login">Přihlásit/Registrovat</a>
+        </div>
+    {% endif %}
+
+    {# Detail #}
+    <div class="main_frame" style = "margin-top: 4px"><h1><a href="/" class="noa">School app</a></h1></div>
+    {% if room is not None %}
+        <div class="medium_frame_thin"><h2>Místnost č. {{ room.doorNumber }}, Budova {{ room.address }}</h2></div>
+        <div class="medium_frame">
+            <form method="post">{% csrf_token %}
+                {% if app_user.permission_id >= 3 and editing == True  %}
+                    <table class="user_table">
+                        <tr>
+                           <th class="half">Adresa</th>
+                           <td><label><input class="login_input" type="text" name="address" value="{{ room.address }}"></label></td>
+                        </tr>
+                        <tr>
+                           <th>Číslo dveří</th>
+                           <td><label><input class="login_input" type="number" name="doorNumber" value="{{ room.doorNumber }}" min="0"></label></td>
+                        </tr>
+                        <tr>
+                           <th>Kapacita</th>
+                           <td><label><input class="login_input" type="number" name="capacity" value="{{ room.capacity }}" min="1"></label></td>
+                        </tr>
+                        <tr>
+                           <th>Typ místnosti</th>
+                           <td>
+                               <label>
+                                   <select class="login_input" name="typ_mistnosti">
+                                        {% for type in types %}
+                                            <option value="{{ type.id }}" {% if type == room.roomType %} selected="selected" {% endif %}>{{ type }}</option>
+                                        {% endfor %}
+                                    </select>
+                               </label>
+                           </td>
+                        </tr>
+                        <tr>
+                            <th style="height: 30px">Vybavení</th>
+                            <td>
+                                {% for equip in room_equip %}
+                                    {{ equip }} <br>
+                                {% endfor %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>*Změnit Vybavení</th>
+                            <td>
+                                <label>
+                                    <select class="login_input" name="equip_change">
+                                        <option value="__nic__" selected="selected"></option>
+                                        {% for equip in equipment %}
+                                            <option value="{{ equip.id }}">{{ equip.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>*Změnit počet kusů na</th>
+                            <td><label><input class="login_input" type="number" name="count" value="0" min="0"></label></td>
+                        </tr>
+                    </table>
+                    <div>
+                        <input type="hidden" name="room" value="{{ resend }}">
+                        <input class="button" type="submit" name="save_changes" value="Uložit změny">
+                        <input class="button" type="reset" value="Obnovit původní hodnoty">
+                        <input class="button" type="button" value="Smazat místnost" onclick="confirmation()">
+                        <input style="visibility: hidden;" type="submit" id=delete name="delete">
+                        <label class="spacer_err">{{ save_err }}</label>
+                        <script>
+                            function confirmation() {
+                                if (confirm("Potvrďte smazání místnosti"))
+                                    document.getElementById('delete').click();
+                            }
+                        </script>
+                    </div>
+                {% else %}
+                    <table class="user_table">
+                        <tr>
+                           <th class="half">Adresa</th>
+                           <td>{{ room.address }}</td>
+                        </tr>
+                        <tr>
+                           <th>Číslo dveří</th>
+                           <td>{{ room.doorNumber }}</td>
+                        </tr>
+                        <tr>
+                           <th>Kapacita</th>
+                           <td>{{ room.capacity }}</td>
+                        </tr>
+                        <tr>
+                           <th>Typ místnosti</th>
+                           <td>{{ room.roomType }}</td>
+                        </tr>
+                        <tr>
+                            <th>Vybavení</th>
+                            <td>
+                                {% for equip in room_equip %}
+                                    {{ equip }} <br>
+                                {% endfor %}
+                            </td>
+                        </tr>
+                    </table>
+                    {% if app_user.permission_id >= 3 and editing is False %}
+                        <div>
+                            <input type="hidden" name="room" value="{{ resend }}">
+                            <input class="button" type="submit" name="edit" value="Editovat">
+                        </div>
+                    {% endif %}
+                    {% if term_err is not None %}
+                        <br>V této místnosti mají probíhat následující předměty:
+                        {% for course in course_err %}
+                            <li>{{ course }}</li>
+                        {% endfor %}
+                    {% endif %}
+                    {% if term_err is not None %}
+                        <br>V této místnosti se mají konat následující termíny:
+                        {% for term in term_err %}
+                            <li>{{ term }}</li>
+                        {% endfor %}
+                        <br> Pro smazání místnosti prosím nejdříve vyřešte kolize.
+                    {% endif %}
+                {% endif %}
+            </form>
+        </div>
+    {% else %}
+        <div class="medium_frame_thin"><h2>Místnost nenalezena</h2></div>
+    {% endif %}
+</body>
+</html>

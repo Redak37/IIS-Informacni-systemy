@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ detail_user }}</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'school_app/style.css' %}" />
+</head>
+<body>
+    {% if app_user is not None %}
+        <div style = "text-align: right">
+            <a href="/?logout">Odhlásit se</a>
+        </div>
+    {% else %}
+        <div style = "text-align: right">
+            <a href="/login">Přihlásit/Registrovat</a>
+        </div>
+    {% endif %}
+    <div class="main_frame" style = "margin-top: 4px"><h1><a href="/" class="noa">School app</a></h1></div>
+    {% if app_user is not None %}
+        <div class="sidenav">
+            <div class="logged_info">
+                Uživatel: {{ app_user }}<br>
+                Skupina: {{ app_user.permission }}
+            </div>
+                <h2>Hlavní menu</h2>
+                <a href="/">Seznam kurzů</a><br>
+                <a href="/schedule">Rozvrh</a><br>
+                <a href="/terms">Termíny</a><br>
+                <a href="/course_register">Registrace kurzů</a><br>
+                {# Lektor #}
+                {% if app_user.permission.id >= 2 %}
+                    <br>
+                    <a href="/my_courses">Moje kurzy</a><br>
+                {% endif %}
+                {# Garant #}
+                {% if app_user.permission.id >= 3 %}
+                    <br>
+                    <a href="/register_manage">Správa registrací</a><br>
+                    <a href="/newcourse">Nový kurz</a><br>
+                {% endif %}
+                {# Vedoucí #}
+                {% if app_user.permission.id >= 4 %}
+                    <br>
+                    <a href="/rooms">Správa místností</a><br>
+                    <a href="/course_approval">Schvalování kurzů</a><br>
+                    <a href="/course_types">Správa typů kurzů</a><br>
+                {% endif %}
+                {# Admin #}
+                {% if app_user.permission.id >= 5 %}
+                    <br>
+                    <a href="/users">Správa uživatelů</a><br>
+                {% endif %}
+        </div>
+    {% endif %}
+    {% if detail_user is not None %}
+        <div class="medium_frame">
+            <h2>Detail uživatele {{ detail_user }}</h2>
+        </div>
+        <form method="post">{% csrf_token %}
+            <div class="medium_frame">
+                {# Administrátor #}
+                {% if app_user is not None and app_user.permission_id >= 5 and editing == True %}
+                    <table class="user_table">
+                        <tr>
+                            <th>Login</th>
+                            <td><label><input class="login_input" type="text" name="login" value="{{ detail_user.login }}" required="required"></label></td>
+                        </tr>
+                        <tr>
+                            <th>Jméno</th>
+                            <td><label><input class="login_input" type="text" name="firstName" value="{{ detail_user.firstName }}" required="required"></label></td>
+                        </tr>
+                        <tr>
+                            <th>Příjmení</th>
+                            <td><label><input class="login_input" type="text" name="lastName" value="{{ detail_user.lastName }}" required="required"></label></td>
+                        </tr>
+                        <tr>
+                            <th>Skupina</th>
+                            <td>
+                                <label>
+                                    <select class="login_input" name="permission" required="required">
+                                        <option value="1" {% if detail_user.permission_id == 1 %} selected="selected" {% endif %}>Student</option>
+                                        <option value="2" {% if detail_user.permission_id == 2 %} selected="selected" {% endif %}>Lektor</option>
+                                        <option value="3" {% if detail_user.permission_id == 3 %} selected="selected" {% endif %}>Garant</option>
+                                        <option value="4" {% if detail_user.permission_id == 4 %} selected="selected" {% endif %}>Vedoucí</option>
+                                        <option value="5" {% if detail_user.permission_id == 5 %} selected="selected" {% endif %}>Administrátor</option>
+                                    </select>
+                                </label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Email</th>
+                            <td><label><input class="login_input" type="text" name="email" value="{{ detail_user.email }}" required="required"></label></td>
+                        </tr>
+                        <tr>
+                            <th>Tel. číslo:</th>
+                            <td><label><input class="login_input" type="text" name="phone" value="{{ detail_user.phone }}"></label></td>
+                        </tr>
+                        <tr>
+                            <th>Potvrzený</th>
+                            <td><label><input class="login_input" type="checkbox" name="confirmed" {% if detail_user.confirmed %} checked="checked" {% endif %}></label></td>
+                        </tr>
+                        <tr>
+                            <th>*Nastavit nové heslo</th>
+                            <td><label><input class="login_input" type="password" name="passwd"></label></td>
+                        </tr>
+                        <tr>
+                            <th>*Nové heslo znovu</th>
+                            <td><label><input class="login_input" type="password" name="passwdCheck"></label></td>
+                        </tr>
+                    </table>
+                    <div>
+                        <input class="button" type="submit" name="save_changes" value="Uložit změny">
+                        <input class="button" type="reset" value="Obnovit původní hodnoty">
+                        <label class="spacer_err">{{ save_err }}</label>
+                    </div>
+                {% else %}
+                    <table class="user_table">
+                        <tr>
+                            <th>Login</th>
+                            <td>{{ detail_user.login }}</td>
+                        </tr>
+                        <tr>
+                            <th>Jméno</th>
+                            <td>{{ detail_user.firstName }}</td>
+                        </tr>
+                        <tr>
+                            <th>Příjmení</th>
+                            <td>{{ detail_user.lastName }}</td>
+                        </tr>
+                        <tr>
+                            <th>Skupina</th>
+                            <td>{{ detail_user.permission }}</td>
+                        </tr>
+                        <tr>
+                            <th>Email</th>
+                            <td>{{ detail_user.email }}</td>
+                        </tr>
+                        <tr>
+                            <th>Tel. číslo:</th>
+                            <td>{{ detail_user.phone }}</td>
+                        </tr>
+                        <tr>
+                            <th>Potvrzený</th>
+                            <td><label><input disabled="disabled" type="checkbox" {% if detail_user.confirmed %} checked="checked" {% endif %}></label></td>
+                        </tr>
+                    </table>
+                    {% if app_user is not None and app_user.permission_id >= 5 and editing is None %}
+                        <div><input class="button" type="submit" name="admin_edit" value="Editovat"></div>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </form>
+    {% else %}
+        <div class="medium_frame"><h2>Uživatel nenalezen</h2></div>
+    {% endif %}
+</body>
+</html>

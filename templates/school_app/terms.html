@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <title>Termíny</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'school_app/style.css' %}" />
+</head>
+<body>
+    {% if app_user is not None %}
+        <div style = "text-align: right">
+            <a href="/?logout">Odhlásit se</a>
+        </div>
+        <div class="main_frame" style = "margin-top: 4px"><h1><a href="/" class="noa">School app</a></h1></div>
+        <div class="sidenav">
+            <div class="logged_info">
+                Uživatel: {{ app_user }}<br>
+                Skupina: {{ app_user.permission }}
+            </div>
+            <h2>Hlavní menu</h2>
+            <a href="/">Seznam kurzů</a><br>
+            <a href="/schedule">Rozvrh</a><br>
+            <a href="/terms">Termíny</a><br>
+            <a href="/course_register">Registrace kurzů</a><br>
+            {# Lektor #}
+            {% if app_user.permission.id >= 2 %}
+                <br>
+                <a href="/my_courses">Moje kurzy</a><br>
+            {% endif %}
+            {# Garant #}
+            {% if app_user.permission.id >= 3 %}
+                <br>
+                <a href="/register_manage">Správa registrací</a><br>
+                <a href="/newcourse">Nový kurz</a><br>
+            {% endif %}
+            {# Vedoucí #}
+            {% if app_user.permission.id >= 4 %}
+                <br>
+                <a href="/rooms">Správa místností</a><br>
+                <a href="/course_approval">Schvalování kurzů</a><br>
+                <a href="/course_types">Správa typů kurzů</a><br>
+            {% endif %}
+            {# Admin #}
+            {% if app_user.permission.id >= 5 %}
+                <br>
+                <a href="/users">Správa uživatelů</a><br>
+            {% endif %}
+        </div>
+
+        {# Termíny #}
+        <div class="medium_frame_thin"><h2>Seznam termínů</h2></div>
+        <div class="medium_frame">
+            <table style="margin-bottom: 10px;">
+                <tr>
+                    <th class="min">Kurz</th>
+                    <th style="width: 24%">Název termínu</th>
+                    <th style="width: 24%">Typ</th>
+                    <th>Datum a čas</th>
+                    <th class="min">Hodnocení</th>
+                </tr>
+                {% for term in terms %}
+                    <tr>
+                        <td class="center"><a href="course_detail?predmet={{ term.course.abbrev }}">{{ term.course.abbrev }}</a></td>
+                        <td><a href="{% url 'term' term.id %}">{{ term.title }}</a></td>
+                        <td>{{ term.termType }}</td>
+                        <td>
+                            {% if term.repeatIn == 0 %}
+                                {{ term.date }}, {{ term.time }}
+                            {% elif term.repeatIn == 1 %}
+                                Každý týden od {{ term.date }} v {{ term.time }} do {{ term.dateEnd }}
+                            {% elif term.repeatIn <= 4 %}
+                                Každý {{ term.repeatIn }}. týden od {{ term.date }} v {{ term.time }} do {{ term.dateEnd }}
+                            {% else %}
+                                Každých {{ term.repeatIn }} týdnů od {{ term.date }} v {{ term.time }} do {{ term.dateEnd }}
+                            {% endif %}
+                        </td>
+                        <td class="center">{% if points is not None and term.id in points.keys %}
+                                {% for eval in points.values %}
+                                    {% if eval.term == term %}
+                                        {{ eval.points }}
+                                    {% endif %}
+                                {% endfor %}
+                            {% else %}-{% endif %} / {{ term.points }}</td>
+                    </tr>
+                {% endfor %}
+            </table>
+        </div>
+    {% else %}
+        <div style = "text-align: right">
+            <a href="/login">Přihlásit/Registrovat</a>
+        </div>
+        <div class="main_frame" style = "margin-top: 4px"><h1><a href="index" class="noa">School app</a></h1></div>
+        <div class="medium_frame"><h2>Neregistrovaní uživatelé nemají právo zobrazit tuto stránku.</h2></div>
+    {% endif %}
+</body>
+</html>

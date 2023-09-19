@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'school_app/style.css' %}" />
+</head>
+<body>
+    <div class="main_frame"><h1><a href="/" class="noa">School app</a></h1></div>
+    <div class="medium_frame_thin"><h2>Prosím, přihlaste se nebo se registrujte.</h2></div>
+
+    <form action="login" method="post">{% csrf_token %}
+        <div class="medium_frame_thin" id="login_form">
+            <div class="column">
+                <label class="login_label" for="login">Přihlašovací jméno:</label>
+                <label class="login_label" for="password">Heslo:</label>
+                <label class="spacer_small"></label>
+                <label class="spacer_err">{{ login_err }}</label>
+                <label class="spacer"></label>
+                <label class="login_label" for="name">Křestní jméno:</label>
+                <label class="login_label" for="surname">Příjmení:</label>
+                <label class="login_label" for="email">Email:</label>
+                <label class="login_label" for="tel">*Tel. číslo:</label>
+                <label class="login_label" for="password_reg">Heslo:</label>
+                <label class="login_label" for="password_reg_ctrl">Heslo znovu:</label>
+                <label class="spacer_small" style="text-align: right;"><i style="font-size: small">* = Volitelné</i></label>
+                <label class="spacer_err">{{ register_err }}</label>
+            </div>
+            <div class="column">
+                <input class="login_input" type="text" id="login" name="login">
+                <input class="login_input" type="password" id="password" name="password">
+                <label class="spacer_small"></label>
+                <input class="button" type="submit" name="logreg_btn" value="Přihlásit se!">
+                <label class="spacer"></label>
+                <input class="login_input" type="text" id="name" name="name">
+                <input class="login_input" type="text" id="surname" name="surname">
+                <input class="login_input" type="text" id="email" name="email">
+                <input class="login_input" type="text" id="tel" name="tel">
+                <input class="login_input" type="password" id="password_reg" name="password_reg">
+                <input class="login_input" type="password" id="password_reg_ctrl" name="password_reg_ctrl">
+                <label class="spacer_small"></label>
+                <input class="button" type="submit" name="logreg_btn" value="Registrovat se">
+            </div>
+        </div>
+    </form>
+</body>
+</html>

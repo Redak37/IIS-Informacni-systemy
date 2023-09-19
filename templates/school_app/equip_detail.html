@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ equip.name }}</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'school_app/style.css' %}" />
+</head>
+<body>
+    {% if app_user is not None %}
+        <div style = "text-align: right">
+            <a href="/index?logout">Odhlásit se</a>
+        </div>
+        <div class="sidenav">
+            <div class="logged_info">
+                Uživatel: {{ app_user }}<br>
+                Skupina: {{ app_user.permission }}
+            </div>
+            <h2>Hlavní menu</h2>
+            <a href="/">Seznam kurzů</a><br>
+            <a href="/schedule">Rozvrh</a><br>
+            <a href="/terms">Termíny</a><br>
+            <a href="/course_register">Registrace kurzů</a><br>
+            {# Lektor #}
+            {% if app_user.permission.id >= 2 %}
+                <br>
+                <a href="/my_courses">Moje kurzy</a><br>
+            {% endif %}
+            {# Garant #}
+            {% if app_user.permission.id >= 3 %}
+                <br>
+                <a href="/register_manage">Správa registrací</a><br>
+                <a href="/newcourse">Nový kurz</a><br>
+            {% endif %}
+            {# Vedoucí #}
+            {% if app_user.permission.id >= 4 %}
+                <br>
+                <a href="/rooms">Správa místností</a><br>
+                <a href="/course_approval">Schvalování kurzů</a><br>
+                <a href="/course_types">Správa typů kurzů</a><br>
+            {% endif %}
+            {# Admin #}
+            {% if app_user.permission.id >= 5 %}
+                <br>
+                <a href="/users">Správa uživatelů</a><br>
+            {% endif %}
+
+            {# Detail #}
+            <div class="main_frame" style = "margin-top: 4px"><h1><a href="/" class="noa">School app</a></h1></div>
+            {% if equip is not None %}
+                <div class="medium_frame_thin"><h2>Výbava č. {{ equip.name }}</h2></div>
+                <div class="medium_frame">
+                    <form method="post">{% csrf_token %}
+                        {% if app_user.permission_id >= 3 and editing == True  %}
+                            <table class="user_table">
+                                <tr>
+                                   <th class="half">Název</th>
+                                   <td><label><input class="login_input" type="text" name="name" value="{{ equip.name }}"></label></td>
+                                </tr>
+                                <tr>
+                                   <th>Popis</th>
+                                   <td><label><input class="login_input" type="text" name="description" value="{{ equip.description }}"></label></td>
+                                </tr>
+                                <tr>
+                                   <th>Cena (CZK)</th>
+                                   <td><label><input class="login_input" type="number" name="cost" value="{{ equip.cost }}"></label></td>
+                                </tr>
+                            </table>
+                            <div>
+                                <input type="hidden" name="equip" value="{{ resend }}">
+                                <input class="button" type="submit" name="save_changes" value="Uložit změny">
+                                <input class="button" type="reset" value="Obnovit původní hodnoty">
+                                <input class="button" type="submit" name="delete" value="Smazat vybavení">
+                                <label class="spacer_err">{{ save_err }}</label>
+                            </div>
+                        {% else %}
+                            <table class="user_table">
+                                <tr>
+                                   <th class="half">Název</th>
+                                   <td>{{ equip.name }}</td>
+                                </tr>
+                                <tr>
+                                   <th>Popis</th>
+                                   <td>{{ equip.description }}</td>
+                                </tr>
+                                <tr>
+                                   <th>Cena</th>
+                                   <td>{{ equip.cost }},-</td>
+                                </tr>
+                            </table>
+                            {% if app_user.permission_id >= 3 and editing is False %}
+                                <div>
+                                    <input type="hidden" name="equip" value="{{ resend }}">
+                                    <input class="button" type="submit" name="edit" value="Editovat">
+                                </div>
+                            {% endif %}
+                        {% endif %}
+                    </form>
+                </div>
+            {% else %}
+                <div class="medium_frame_thin"><h2>Vybavení nenalezeno</h2></div>
+            {% endif %}
+        </div>
+    {% else %}
+        <div style = "text-align: right">
+            <a href="/login">Přihlásit/Registrovat</a>
+        </div>
+        <div class="main_frame" style = "margin-top: 4px"><h1><a href="index" class="noa">School app</a></h1></div>
+        <div class="medium_frame"><h2>Neregistrovaní uživatelé nemají právo zobrazit tuto stránku.</h2></div>
+    {% endif %}
+</body>
+</html>

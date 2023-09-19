@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ course.abbrev }}</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'school_app/style.css' %}" />
+</head>
+<body>
+    {% if app_user is not None %}
+        <div style = "text-align: right">
+            <a href="/?logout">Odhlásit se</a>
+        </div>
+        <div class="sidenav">
+            <div class="logged_info">
+                Uživatel: {{ app_user }}<br>
+                Skupina: {{ app_user.permission }}
+            </div>
+            <h2>Hlavní menu</h2>
+            <a href="/">Seznam kurzů</a><br>
+            <a href="/schedule">Rozvrh</a><br>
+            <a href="/terms">Termíny</a><br>
+            <a href="/course_register">Registrace kurzů</a><br>
+            {# Lektor #}
+            {% if app_user.permission.id >= 2 %}
+                <br>
+                <a href="/my_courses">Moje kurzy</a><br>
+            {% endif %}
+            {# Garant #}
+            {% if app_user.permission.id >= 3 %}
+                <br>
+                <a href="/register_manage">Správa registrací</a><br>
+                <a href="/newcourse">Nový kurz</a><br>
+            {% endif %}
+            {# Vedoucí #}
+            {% if app_user.permission.id >= 4 %}
+                <br>
+                <a href="/rooms">Správa místností</a><br>
+                <a href="/course_approval">Schvalování kurzů</a><br>
+                <a href="/course_types">Správa typů kurzů</a><br>
+            {% endif %}
+            {# Admin #}
+            {% if app_user.permission.id >= 5 %}
+                <br>
+                <a href="/users">Správa uživatelů</a><br>
+            {% endif %}
+        </div>
+    {% else %}
+        <div style = "text-align: right">
+            <a href="/login">Přihlásit/Registrovat</a>
+        </div>
+    {% endif %}
+
+    {# Detail #}
+    <div class="main_frame" style = "margin-top: 4px"><h1><a href="/" class="noa">School app</a></h1></div>
+    {% if course is not None %}
+        <div class="medium_frame_thin"><h2>Kurz: {{ course.title }}</h2></div>
+        <div class="medium_frame">
+            <form method="post">{% csrf_token %}
+                {% if app_user.permission_id >= 3 and editing == True  %}
+                    <table class="user_table">
+                        <tr>
+                           <th class="half">Název kurzu</th>
+                           <td><label><input class="login_input" type="text" name="title" value="{{ course.title }}" required="required"></label></td>
+                        </tr>
+                        <tr>
+                           <th>Zkratka</th>
+                           <td>{{ course.abbrev }}</td>
+                        </tr>
+                        <tr>
+                           <th>Garant</th>
+                           <td>
+                               <label>
+                                   <select class="login_input" name="garant" required="required">
+                                       {% for garant in users %}
+                                           {% if garant.permission_id >= 3 %}
+                                               <option value="{{ garant.login }}" {% if garant == course.garant %} selected="selected" {% endif %} >{{ garant.login }}</option>
+                                           {% endif %}
+                                       {% endfor %}
+                                   </select>
+                               </label>
+                           </td>
+                        </tr>
+                        <tr>
+                           <th>Typ kurzu</th>
+                           <td>
+                               <label>
+                                   <select class="login_input" name="typ_kurzu" required="required">
+                                        {% for type in types %}
+                                            <option value="{{ type }}" {% if type == course.courseType %} selected="selected" {% endif %} >{{ type }}</option>
+                                        {% endfor %}
+                                    </select>
+                               </label>
+                           </td>
+                        </tr>
+                        <tr>
+                           <th>Cena</th>
+                           <td><label><input class="login_input" type="number" name="price" value="{{ course.price }}" required="required" min="0"></label></td>
+                        </tr>
+                        <tr>
+                           <th>Popis</th>
+                           <td><label><textarea rows="5" cols="60" class="login_input" name="description">{{ course.description }}</textarea></label></td>
+                        </tr>
+                        <tr>
+                           <th>Schválen</th>
+                           <td>{% if course.confirmed %} Ano {% else %} Ne {% endif %}</td>
+                        </tr>
+                        <tr>
+                           <th>Vyučující</th>
+                            <td>
+                                {% for lecturer in course.lecturers.all %}
+                                    {{ lecturer }} <br>
+                                {% endfor %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Zapsáno studentů</th>
+                            <td>{{ assignedStudentCount }}</td>
+                        </tr>
+                        {% if course.confirmed %}
+                            {% if app_user.permission_id >= 4 %}
+                                <tr>
+                                    <th>*Přidat Místnost</th>
+                                    <td>
+                                        <label>
+                                            <select class="login_input" name="room_add">
+                                                <option value="__nikdo__" selected="selected"></option>
+                                                {% for room in rooms %}
+                                                    {% if room not in course.rooms.all %}
+                                                        <option value="{{ room.id }}">{{ room }}</option>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </select>
+                                        </label>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>*Odebrat Místnost</th>
+                                    <td>
+                                        <label>
+                                            <select class="login_input" name="room_del">
+                                                <option value="__nikdo__" selected="selected"></option>
+                                                {% for room in rooms %}
+                                                    {% if room in course.rooms.all %}
+                                                        <option value="{{ room.id }}">{{ room }}</option>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </select>
+                                        </label>
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        <tr>
+                            <th>*Přidat Vyučující</th>
+                            <td>
+                                <label>
+                                    <select class="login_input" name="lector_add">
+                                        <option value="__nikdo__" selected="selected"></option>
+                                        {% for lecturer in users %}
+                                            {% if lecturer.permission_id >= 2 and lecturer not in course.lecturers.all %}
+                                                <option value="{{ lecturer.login }}">{{ lecturer.login }}</option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                </label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>*Odebrat Vyučující</th>
+                            <td>
+                                <label>
+                                    <select class="login_input" name="lector_del">
+                                        <option value="__nikdo__" selected="selected"></option>
+                                        {% for lecturer in users %}
+                                            {% if lecturer.permission_id >= 2 and lecturer in course.lecturers.all %}
+                                                <option value="{{ lecturer.login }}">{{ lecturer.login }}</option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                </label>
+                            </td>
+                        </tr>
+                        {% if app_user.permission_id >= 5 %}
+                            <tr>
+                                <th>*Přidat studenta</th>
+                                <td>
+                                    <label>
+                                        <select class="login_input" name="student_add">
+                                            <option value="__nikdo__" selected="selected"></option>
+                                            {% for student in students_unassigned %}
+                                                <option value="{{ student.login }}">{{ student.login }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>*Odebrat studenta</th>
+                                <td>
+                                    <label>
+                                        <select class="login_input" name="student_del">
+                                            <option value="__nikdo__" selected="selected"></option>
+                                            {% for student in students %}
+                                                <option value="{{ student.login }}">{{ student.login }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </label>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    {% endif %}
+                    <!--<tr>
+                        <th>Debug</th>
+                        <td>
+                           {% for x in types %}
+                               {{ x.courseType }}
+                           {% endfor %}
+                        </td>
+                    </tr>-->
+                    </table>
+                    <div>
+                        <input type="hidden" name="predmet" value="{{ resend }}">
+                        <input class="button" type="submit" name="save_changes" value="Uložit změny">
+                        <input class="button" type="reset" value="Obnovit původní hodnoty">
+                        <input type="hidden" id="mazani_kurzu"  name="__noname__">
+                        <button class="button" onclick="delete_course()" >Smazat kurz</button>
+                        {% if not course.confirmed and app_user.permission_id >= 4 %}
+                            <input class="button" type="submit" name="approveCourse" value="Schválit kurz">
+                        {% endif %}
+                        <label class="spacer_err">{{ save_err }}</label>
+                        <script>
+                            function delete_course() {
+                                if (confirm("Opravdu chcete smazat tento kurz?")) {
+                                    document.getElementById("mazani_kurzu").name = "delete_course";
+                                }
+                            }
+                        </script>
+                    </div>
+                {% else %}
+                    <table class="user_table">
+                        <tr>
+                           <th class="half">Zkratka</th>
+                           <td>{{ course.abbrev }}</td>
+                        </tr>
+                        <tr>
+                           <th>Garant</th>
+                           <td><a href="/user/{{ course.garant }}/">{{ course.garant }}</a></td>
+                        </tr>
+                        <tr>
+                           <th>Typ kurzu</th>
+                           <td>{{ course.courseType }}</td>
+                        </tr>
+                        <tr>
+                           <th>Cena</th>
+                           <td>{{ course.price }},-</td>
+                        </tr>
+                        <tr>
+                           <th>Popis</th>
+                           <td><label><textarea style="border: None; padding-left: 0; padding-right: 0" rows="5" cols="60" disabled class="description">{{ course.description }}</textarea></label></td>
+                        </tr>
+                        <tr>
+                           <th>Místnost</th>
+                            <td>
+                                {% for room in course.rooms.all %}
+                                    <a href="/room_detail?room={{ room.id }}">{{ room }}</a><br>
+                                {% endfor %}
+                            </td>
+                        </tr>
+                        <tr>
+                           <th>Vyučující</th>
+                            <td>
+                                {% for lecturer in course.lecturers.all %}
+                                    <a href="/user/{{ lecturer }}/">{{ lecturer }}</a><br>
+                                {% endfor %}
+                            </td>
+                        </tr>
+                    <tr>
+                        <th>Zapsáno studentů</th>
+                        <td>{{ assignedStudentCount }}</td>
+                    </tr>
+                    </table>
+                    {% if app_user.permission_id > 3 and editing is False or app_user.permission_id == 3 and app_user == course.garant and editing is False %}
+                        <input type="hidden" name="predmet" value="{{ resend }}">
+                        <input class="button" type="reset" value="Editovat" onclick="res_sub()">
+                        <input style="visibility: hidden;" type="submit" id=resubmit name="edit">
+                        <script>
+                            function res_sub() {
+                                document.getElementById('resubmit').click();
+                            }
+                        </script>
+                    {% endif %}
+                {% endif %}
+
+                {% if course.confirmed %}
+                    <div class="spacer_err"><label>{{ message_edit }}</label></div>
+                    <label>Seznam termínů</label>
+                    <table style="margin-bottom: 10px;">
+                        <tr>
+                            {% if app_user.permission_id >= 4 or app_user.permission_id == 3 and course.garant == app_user or app_user.permission_id == 2 and app_user in course.lecturers.all %}
+                                <th class="min"><label><input type="checkbox" checked disabled></label></th>
+                            {% endif %}
+                            <th style="width: 25%">Název termínu</th>
+                            <th style="width: 25%">Typ</th>
+                            <th>Kdy</th>
+                            <th class="min">Hodnocení</th>
+                        </tr>
+                        {% for term in terms %}
+                            <tr>
+                                {% if app_user.permission_id >= 4 or app_user.permission_id == 3 and course.garant == app_user or app_user.permission_id == 2 and app_user in course.lecturers.all %}
+                                    <td><label><input type="checkbox" name="term-to-delete_{{  term.id }}"></label></td>
+                                {% endif %}
+                                <td><a href="{% url 'term' term.id %}">{{ term.title }}</a></td>
+                                <td>{{ term.termType }}</td>
+                                <td>
+                                    {% if term.repeatIn == 0 %}
+                                        {{ term.date }}, {{ term.time }}
+                                    {% elif term.repeatIn == 1 %}
+                                        Každý týden od {{ term.date }} v {{ term.time }} do {{ term.dateEnd }}
+                                    {% elif term.repeatIn <= 4 %}
+                                        Každý {{ term.repeatIn }}. týden od {{ term.date }} v {{ term.time }} do {{ term.dateEnd }}
+                                    {% else %}
+                                        Každých {{ term.repeatIn }} týdnů od {{ term.date }} v {{ term.time }} do {{ term.dateEnd }}
+                                    {% endif %}
+                                </td>
+                                <td class="center">{% if points is not None and term.id in points.keys %}
+                                        {% for eval in points.values %}
+                                            {% if eval.term == term %}
+                                                {{ eval.points }}
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% else %}-{% endif %} / {{ term.points }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                    {% if app_user.permission_id >= 4 or app_user.permission_id == 3 and course.garant == app_user or app_user.permission_id == 2 and app_user in course.lecturers.all %}
+                        <div style="padding-bottom: 30px">
+                            <input class="button" type="submit" name="deleteTerm" value="Smazat vybrané termíny">
+                        </div>
+                        <label>Nový termín</label>
+                        <table class="user_table">
+                            <tr>
+                                <th>Název nového termínu</th>
+                                <td><label><input class="login_input" type="text" name="termTitle"></label></td>
+                            </tr>
+                            <tr>
+                                <th>Typ nového termínu</th>
+                                <td>
+                                    <label>
+                                        <select class="login_input" name="termType">
+                                            <option value="" disabled selected>Vyber typ termínu</option>
+                                            {% for type in termTypes %}
+                                                <option value="{{ type.id }}">{{ type }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>*Popis</th>
+                                <td><label><textarea rows="5" cols="60" class="login_input" name="termDescription"></textarea></label></td>
+                            </tr>
+                            <tr>
+                                <th>*Maximum bodů za termín</th>
+                                <td><label><input class="login_input" type="number" name="termPoints" value="0" min="0"></label></td>
+                            </tr>
+                            <tr>
+                                <th>Datum zahájení/konání</th>
+                                <td><label><input class="login_input" type="date" name="termDate" id="datePicker"></label></td>
+                            </tr>
+                            <tr>
+                                <th>*Čas zahájení/konání</th>
+                                <td><label><input class="login_input" type="time" name="termTime" value="12:00"></label></td>
+                            </tr>
+                            <tr>
+                                <th>*Trvání</th>
+                                <td><label><input class="login_input" type="time" name="termDuration" value="02:00"></label></td>
+                            </tr>
+                            <tr>
+                                <th>*Opakovat každých x týdnů (0 = neopakovat)</th>
+                                <td><label><input class="login_input" type="number" name="termRepeatIn" value="0" min="0"></label></td>
+                            </tr>
+                            <tr>
+                                <th>*Poslední datum konání (nezadáno = datum zahájení)</th>
+                                <td><label><input class="login_input" type="date" name="termDateEnd"></label></td>
+                            </tr>
+                            <tr>
+                                <th>*Místnost</th>
+                                <td>
+                                    <label>
+                                        <select class="login_input" name="termRoom">
+                                            <option value="" selected="selected">Žádná</option>
+                                            {% for room in course.rooms.all %}
+                                                <option value="{{ room.id }}">{{ room }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th><label class="spacer_small" style="text-align: right"><i style="font-size: small">* = volitelné</i></label></th>
+                                <td><input class="button" type="submit" name="newTerm" value="Vytvořit nový termín"></td>
+                            </tr>
+                        </table>
+                        <div class="spacer_err"><label>{{ message }}</label></div>
+                    {% endif %}
+                {% endif %}
+            </form>
+        </div>
+    {% else %}
+        {% if deleted == True %}
+            <div class="medium_frame_thin"><h2>Kurz smazán</h2></div>
+        {% else %}
+            <div class="medium_frame_thin"><h2>Kurz nenalezen</h2></div>
+        {% endif %}
+    {% endif %}
+</body>
+</html>
+<script>document.getElementById('datePicker').valueAsDate = new Date();</script>

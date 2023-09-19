@@ -1,0 +1,179 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!-- saved from url=(0067)https://www.fit.vutbr.cz/study/courses/IIS/private/projekt/doc.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <title>Projekt IIS</title>
+    <style type="text/css">
+    	table { border-collapse: collapse; }
+    	td, th { border: 1px solid black; padding: 0.3em 0.5em; text-align: left; }
+    	dt { font-weight: bold; margin-top: 0.5em; }
+    </style>
+</head>
+<body>
+
+<!-- Zkontrolujte prosím nastavení kódování v hlavičce dokumentu 
+     podle použitého editoru -->
+
+<h1>Projekt IIS: Varianta 5. - Škola: správa a registrace výukových kurzů</h1>
+<h2>Název aplikace: School app</h2>
+<dl>
+	<dt>Autoři</dt>
+	<dd>Radek Duchoň
+	    <a href="mailto:xducho07@stud.fit.vutbr.cz">xducho07@stud.fit.vutbr.cz</a> -
+		Návrh databáze, refactorizace, programování
+	</dd>
+	<dd>Jan Juda
+	    <a href="mailto:xjudaj00@stud.fit.vutbr.cz">xjudaj00@stud.fit.vutbr.cz</a> -
+		Hlavní programátor, designer GUI, scrum master
+	</dd>
+  <dd>Josef Oškera
+	    <a href="mailto:xosker03@stud.fit.vutbr.cz">xosker03@stud.fit.vutbr.cz</a> -
+		Server master, programování
+	</dd>
+	<dt>URL aplikace</dt>
+	<dd><a href="http://mallux.ga:40023/">http://mallux.ga:40023/</a></dd>
+    <dd><a href="http://83.240.58.136:40023/">http://83.240.58.136:40023/</a></dd>
+</dl>
+
+<h2>Uživatelé systému pro testování</h2>
+<p>Zde jsou uvedeni zástupci <strong>všech rolí uživatelů</strong>.</p>
+<table>
+<tbody><tr><th>Login</th><th>Heslo</th><th>Role</th></tr>
+<tr><td>admin</td><td>admin</td><td>Administrátor</td></tr>
+<tr><td>vedouci</td><td>vedouci</td><td>Vedoucí</td></tr>
+<tr><td>garant</td><td>garant</td><td>Garant</td></tr>
+<tr><td>lektor</td><td>lektor</td><td>Lektor</td></tr>
+<tr><td>student</td><td>student</td><td>Student</td></tr>
+</tbody></table>
+
+<h2>Diagram případů užití</h2>
+<br>
+<img src="usecase.svg" alt="usecase diagram">
+<br>
+<h2>Implementace</h2>
+<p>
+    Při prvním spuštění serveru s nastavenou databází se databáze naplní předdefinovanými skupinami práv,
+    typy termínů a typy místností.<br>
+</p>
+<h3>Frontend - Prezetační vrstva</h3>
+<p>
+    Frontend je napsán pomocí CSS, Django HTML šablon, což je HTML obohacené o šablonovací příkazy,
+    které dogenerují HTML obsah podle atributů, které backend šabloně předá pomoc funkce render, a Javascriptu.<br>
+    Tyto šablonovací příkazy fungují tak, že pokud v backendu z databáze získáme seznam kurzů, tak ho můžeme šabloně
+    předat a tak pak pomocí příkazu for může pro každý kurz z toho seznamu například vygenerovat řádek tabulky.
+    Tímto způsobem je udělané zobrazení obsahu ve všech tabulkách a seznamech, které jdou v informačním systému vidět.
+</p>
+<h3>Backend - Vrstva výpočetní logiky & datová vrstva</h3>
+<p>
+    Framework django dělá nad databází vysokou vrstu abstrakce a umožňuje nám přistupovat k datům přímo přes
+    objekty definované v souboru IIS_school/models.py (jinak řečeno tento soubor specifikuje datovou
+    vrstu aplikace).<br>
+    Většina výpočetní logiky se ukrývá v souboru school_app/views.py<br>
+    Celý proces zpracování požadavku klienta probíhá tak, že klient zadá nějakou URL adresu (např. server:PORT/login),
+    z té se skriptem school_app/urls.py zjistí, jaká funkce v jakém souboru se má zavolat. Tato funkce se zavolá
+    a očekává se, že její návratová hodnota bude zobrazitelná HTML stránka.
+</p>
+<h4>Popis jednotlivých případů užití</h4>
+<p>
+<ul>
+    <li>Zobrazení seznamu kurzů (všech nebo zapsaných) a vyhledávání v něm je realizováno ve funkci <i>index</i>,
+        respektive ve funkci <i>home</i>, která je funkcí <i>index</i> volána, pokud je přihlášen nějaký uživatel.</li>
+    <li>Informace o kurzu jde procházet "rozkliknutím kurzu" (třeba ze seznamu kurzů), což otevře stránku detail kurzu,
+        kterou dodá funkce <i>course_detail</i>. Na této stránce je také vidět seznam termínů tohoto kurzu
+        (které se dají dále rozkliknout a prohlížet) a pro oprávněné uživatele je zde také možnost editovat kurz,
+        přidávat ke kurzu vyučující, místnosti, a přidávat a mazat termíny .</li>
+    <li>Zobrazení informací o uživateli je implementováno ve funkci <i>user_detail</i>, podobně jako informace o
+        místnosti v <i>room_detail</i>, informace o jednotlivém vybavení v <i>equip_detail</i> a informace o termínu
+        v <i>term_detail</i>. Ve funkci <i>term_detail</i> mohou studenti vidět svoje hodnocení termínu a oprávnění uživatelé editovat
+        termín, zadat hodnocení studentům a přistoupit na stránky se přehledem souborů termínu a nahráváním či mazáním souborů.</li>
+    <li>Přehled souborů termínu a možnost jejich mazání uživateli poskytne funkce <i>files</i> a nahrávání souborů funkce <i>upload</i>.</li>
+    <li>Přihlašování a registrace uživatelů (do systému) je spravována funkci <i>login</i>.</li>
+    <li>Registrování studentů do kurzů je realizováno ve funkci <i>course_register</i> a zde lze také vidět čekající registrace.
+        Spravování registrací je v <i>register_manage</i>.</li>
+    <li>Uživatel si může zobrazit seznam pro něj relevantních termínů v záložce Termíny, kterou implementuje funkce <i>terms</i>.</li>
+    <li>Vykreslování rozvrhu zařizuje funkce <i>schedule</i>.</li>
+    <li>Lektoři a více privilegovaní uživatelé si mohou zobrazit seznam kurzů, které vyučují v záložce Moje kurzy.
+        Obsah této záložky generuje funkce <i>my_courses</i>.</li>
+    <li>Vytvoření nového kurzu má na starost funkce <i>newCourse</i>.</li>
+    <li>Spravování místností je pak přístupné díky funkci <i>rooms</i>. Jednotlivé vybavení do místností lze zdávat do
+        systému přes funkci <i>equipment</i>.</li>
+    <li>Schvalování kurzu lze provést hromadně z funkce <i>course_approval</i> nebo individuálně v detailu kurzu.
+        Z detailu kurzu lze kurz také smazat.</li>
+    <li>Přidávání a mazání typů kurzů je implementováno ve funkci <i>courseTypes</i>.</li>
+    <li>Správa uživatelů (editace, potvrzování registraci či změna hesla a další) podporuje funkce <i>users</i>.</li>
+</ul>
+</p>
+
+<h3>Databáze</h3>
+<h4>ER diagram</h4>
+<img src="ER.svg" alt="ER diagram">
+
+<p>Model databáze je popsán v souboru IIS_school/models.py, ze kterého se generuje struktura databáze.</p>
+
+<h2>Instalace</h2>
+
+<h3>Postup instalace na server</h3>
+<p>
+    <ol>
+        <li><b>Databáze (postgres)</b>
+            <br>Je zapotřebí mít nainstalovaný balíček <b>docker</b>.
+            <br>následující příkaz vytvoří kentejner "postgres",
+            <br>--publish exportuje výchozí port databáze na port 40010,
+            <br>-e POSTGRES_PASSWORD= nastaví heslo k databázi (uživatel je "postgres"),
+            <br>--volume připojí "místní složku":"do kontejnerové složky" (pro možno vynechat)
+            <br>
+            <br><b>Příkaz:</b>
+            <br>docker run --detach \
+            <br>--name postgres \
+            <br>--publish 40010:5432 \
+            <br>-e POSTGRES_PASSWORD=jenikuutikejrychle \
+            <br>--volume /home/sdilene/FLASH/SERVER/docker/postgres/data:/var/lib/postgresql/data \
+            <br>postgres
+            <p></p>
+        </li>
+        <li><b>Server (vestavěný django server)</b>
+            <br>Je zapotřebí mít nainstalovaný balíček <b>python</b> a <b>python3-pip</b>.
+            <br>Dále je zapotřebí mít balíček <b>django</b>.
+            <br>Django lze nainstalovat jako systémový balíček např "pacman -S python-django". (Upozornění - např. v repozitáři ubuntu je velmi zastaralá verze.)
+            <br>Alternativa instalace djanga je pomocí python instalátoru pip3 příkazem "pip3 install Django==2.2.6".
+            <br>Dále jsou zapotřebí balíčky <b>python3-psycopg2, bcrypt (instalovat přes pip3)</b>.
+            <br>Více informací viz "Softwarové požadavky".
+        </li>
+    </ol>
+</p>
+<h3>Softwarové požadavky</h3>
+<p>
+    Django - testovaná verze je 2.2.6 (nižší verze než 1.7 nejsou podporovány, verze 3.0 nefunguje)
+    <br>Python - testované verze jsou 3.6.8, 3.7.5 a 3.8.0 (python2 není podporován)
+    <br>Docker - testovaná verze je 19.03.5-ce
+    <br>Postgres - instalován v rámci vytvoření kontejneru, testovaná verze je 12.0-2
+    <br>python3-psycopg2 - testovaná verze je 2.7.4
+    <br>bcrypt - instalovat pomocí pip3, testovaná verze je 3.1.7
+    <br><br>Vyšší verze než zmíněné by měly též fungovat, ale není to garantováno.
+</p>
+<h3>Příprava</h3>
+<ol>
+    <li>Rozbalit archiv s projektem.</li>
+    <li>Přesunout se do složky s projektem.</li>
+    <li>V souboru IIS_school/settings.py je list "ALLOWED_HOSTS" obsahující povolené host ip adresy.<br>V případě potřeby přidejte další.</li>
+</ol>
+<h3>Inicializace databáze</h3>
+<p>
+    <ol>
+        <li>Pro inicializaci databáze je nutné mít nainstalovaný framework django z předchozích kroků</li>
+        <li>V souboru IIS_school/settings.py v sekci DATABASES nastavte připojení "default" databáze na vaši požadovanou databázi (Více info <a href="https://docs.djangoproject.com/en/2.2/ref/settings/#databases">ZDE</a>).<br>
+            Databáze by měla být prázdná. Pokud nemáte k dispozici žádnou běžící databázi, tak lze použít SQLite.
+        </li>
+        <li>Spusťte skript "python manage.py migrate", který by měl celou databázi připravit.</li>
+    </ol>
+</p>
+
+<h3>Spuštění</h3>
+    Pro spuštění databáze je nutné zadat příkazy:
+<ol>
+        <li>docker start postgres <br>#(pouze pokud již není spuštěn (to lze zkontrolovat pomocí příkazu "docker ps"), ale pokud již kontejner spuštěn byl, nic se neděje)</li>
+        <li>python3 manage.py runserver 0:[port]</li>
+		# 0: zpusobí že server bude přijímat spojení ze všech ip adres
+    	<br># [port] je port na kterém běží webserver, např 8000
+</ol>
+</body></html>

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ term }}</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'school_app/style.css' %}" />
+</head>
+<body>
+    {% if app_user is not None %}
+        <div style = "text-align: right">
+            <a href="/?logout">Odhlásit se</a>
+        </div>
+    {% else %}
+        <div style = "text-align: right">
+            <a href="/login">Přihlásit/Registrovat</a>
+        </div>
+    {% endif %}
+    <div class="main_frame" style = "margin-top: 4px"><h1><a href="/" class="noa">School app</a></h1></div>
+    {% if app_user is not None %}
+        <div class="sidenav">
+            <div class="logged_info">
+                Uživatel: {{ app_user }}<br>
+                Skupina: {{ app_user.permission }}
+            </div>
+                <h2>Hlavní menu</h2>
+                <a href="/">Seznam kurzů</a><br>
+                <a href="/schedule">Rozvrh</a><br>
+                <a href="/terms">Termíny</a><br>
+                <a href="/course_register">Registrace kurzů</a><br>
+                {# Lektor #}
+                {% if app_user.permission.id >= 2 %}
+                    <br>
+                    <a href="/my_courses">Moje kurzy</a><br>
+                {% endif %}
+                {# Garant #}
+                {% if app_user.permission.id >= 3 %}
+                    <br>
+                    <a href="/register_manage">Správa registrací</a><br>
+                    <a href="/newcourse">Nový kurz</a><br>
+                {% endif %}
+                {# Vedoucí #}
+                {% if app_user.permission.id >= 4 %}
+                    <br>
+                    <a href="/rooms">Správa místností</a><br>
+                    <a href="/course_approval">Schvalování kurzů</a><br>
+                    <a href="/course_types">Správa typů kurzů</a><br>
+                {% endif %}
+                {# Admin #}
+                {% if app_user.permission.id >= 5 %}
+                    <br>
+                    <a href="/users">Správa uživatelů</a><br>
+                {% endif %}
+        </div>
+    {% endif %}
+    {% if term is not None %}
+        <div class="medium_frame">
+            <h2>Přehled termínu: {{ term }}</h2>
+        </div>
+        <form method="post">{% csrf_token %}
+            <div class="medium_frame">
+                {% if app_user is not None and editing == True %}
+                    <table class="user_table">
+                        <tr>
+                            <th>Název</th>
+                            <td><label><input class="login_input" type="text" name="termTitle" value="{{ term.title }}"></label></td>
+                        </tr>
+                        <tr>
+                            <th>Typ termínu</th>
+                            <td>
+                                <label>
+                                    <select class="login_input" name="termType">
+                                        {% for type in termTypes %}
+                                            <option value="{{ type.id }}" {% if term.termType_id == type.id %} selected {% endif %}>{{ type }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Popis</th>
+                            <td><label><textarea rows="5" cols="60" class="login_input" name="termDescription">{{ term.description }}</textarea></label></td>
+                        </tr>
+                        <tr>
+                            <th>Maximum bodů za termín</th>
+                            <td><label><input class="login_input" type="number" name="termPoints" value="{{ term.points }}" min="0"></label></td>
+                        </tr>
+                        <tr>
+                            <th>Datum zahájení/konání</th>
+                            <td><label><input class="login_input" type="date" name="termDate" value="{{ termDate }}"></label></td>
+                        </tr>
+                        <tr>
+                            <th>Čas zahájení/konání</th>
+                            <td><label><input class="login_input" type="time" name="termTime" value="{{ termTime }}"></label></td>
+                        </tr>
+                        <tr>
+                            <th>Trvání</th>
+                            <td><label><input class="login_input" type="time" name="termDuration" value="{{ termDuration }}"></label></td>
+                        </tr>
+                        <tr>
+                            <th>Opakovat každých x týdnů (0 = neopakovat)</th>
+                            <td><label><input class="login_input" type="number" name="termRepeatIn" value="{{ term.repeatIn }}" min="0"></label></td>
+                        </tr>
+                        <tr>
+                            <th>Datum ukončení (bude použito zahájení pokud nezadáno)</th>
+                            <td><label><input class="login_input" type="date" name="termDateEnd" value="{{ termDateEnd }}"></label></td>
+                        </tr>
+                        <tr>
+                            <th>Místnost</th>
+                            <td>
+                                <label>
+                                    <select class="login_input" name="termRoom">
+                                        {% for room in term.course.rooms.all %}
+                                            <option value="{{ room.id }}" {% if term.room_id == room.id %}selected{% endif %}>{{ room }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </label>
+                            </td>
+                        </tr>
+                    </table>
+                    <div>
+                        <input class="button" type="submit" name="save_changes" value="Uložit změny">
+                        <input class="button" type="reset" value="Obnovit původní hodnoty">
+                        <label class="spacer_err">{{ message }}</label>
+                    </div>
+                {% else %}
+                    <table class="user_table">
+                        <tr>
+                            <th>Název</th>
+                            <td>{{ term.title }}</td>
+                        </tr>
+                        <tr>
+                            <th>Kurz</th>
+                            <td><a href="/course_detail?predmet={{ term.course.abbrev }}">{{ term.course }}</a></td>
+                        </tr>
+                        <tr>
+                            <th>Typ termínu</th>
+                            <td>{{ term.termType }}</td>
+                        </tr>
+                        <tr>
+                            <th>Popis</th>
+                            <td><label><textarea style="border: None; padding-left: 0; padding-right: 0" rows="8" cols="60" disabled class="description">{{ term.description }}</textarea></label></td>
+                        </tr>
+                        <tr>
+                            <th>Hodnocení</th>
+                            <td>{% if points is not None %}{{ points }}{% else %}-{% endif %}/{{ term.points }}</td>
+                        </tr>
+                        <tr>
+                            <th>Datum zahájení/konání</th>
+                            <td>{{ term.date }}</td>
+                        </tr>
+                        <tr>
+                            <th>Čas zahájení/konání</th>
+                            <td>{{ term.time }}</td>
+                        </tr>
+                        <tr>
+                            <th>Trvání</th>
+                            <td>{{ term.duration }}</td>
+                        </tr>
+                        <tr>
+                            <th>Opakování</th>
+                            <td>
+                                {% if term.repeatIn == 0 %}
+                                    Ne
+                                {% elif term.repeatIn == 1 %}
+                                    Každý týden
+                                {% elif term.repeatIn <= 4 %}
+                                    Každý {{ term.repeatIn }}. týden
+                                {% else %}
+                                    Každých {{ term.repeatIn }} týdnů
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Datum ukončení (bude použito zahájení pokud nezadáno)</th>
+                            <td>{{ term.dateEnd }}</td>
+                        </tr>
+                        <tr>
+                            <th>Místnost</th>
+                            <td>{{ term.room }}</td>
+                        </tr>
+                    </table>
+                    <div>
+                        <input type="hidden" name="kurz" value="{{ course_id }}">
+                        <input type="hidden" name="termin" value="{{ term_id }}">
+                        {% if app_user is not None and editing is not None and not editing %}
+                            <input class="button" type="submit" name="admin_edit" value="Editovat">
+                        {% endif %}
+                        <button class="button" type="submit" formaction="/files">Soubory</button>
+                        {% if app_user is not None and editing is not None and not editing %}
+                            <button class="button" type="submit" formaction="/upload">Nahrát soubor</button>
+                        {% endif %}
+                    </div>
+                    {% if app_user is not None and editing is not None and not editing %}
+                        <div class="spacer"></div>
+                        <label>Zadat hodnocení</label>
+                        <table class="user_table">
+                            <tr>
+                                <th>Student:</th>
+                                <td>
+                                    <label>
+                                        <select class="login_input" name="eval">
+                                            <option value="" disabled selected>{% if evals is not None %}Vyber studenta{% else %}Kurz nemá žádné studenty!{% endif %}</option>
+                                            {% for eval in evals %}
+                                                <option value="{{ eval.user.login }}">
+                                                    {{ eval.user }} ({% if eval.points is None %}Nehodnocen{% else %}{{ eval.points }}{% endif %})
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Body:</th>
+                                <td><label><input type="number" name="evalPoints" value="0" min="0" max="{{ term.points }}"></label></td>
+                            </tr>
+                        </table>
+                        <input class="button" type="submit" name="submit_eval" value="Zadat">
+                        <div class="spacer_err"><label>{{ message }}</label></div>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </form>
+    {% else %}
+        <div class="medium_frame"><h2>Termín nenalezen</h2></div>
+    {% endif %}
+</body>
+</html>

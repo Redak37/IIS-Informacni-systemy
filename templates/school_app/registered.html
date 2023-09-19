@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+{% load static %}
+
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <title>Úspěšně registrován!</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'school_app/style.css' %}" />
+</head>
+<body>
+    <div style = "text-align: right">
+        <a href="/login">Přihlásit/Registrovat</a>
+    </div>
+    <div class="main_frame" style = "margin-top: 4px"><h1><a href="/" class="noa">School app</a></h1></div>
+
+    <div class="medium_frame"><h2>
+        {% if new_user is not None %}
+            Úspěšně jsi se registroval! Tvůj login je: <span style="color: #ff0000">{{ new_user.login }}</span> <br>
+            Dobře si svůj login zapamatuj, protože se s ním budeš přihlašovat.
+        {% else %}
+            Stránka úspěšné registrace. Zde uživatel po registraci uvidí svůj login.
+        {% endif %}
+    </h2></div>
+</body>
+</html>
